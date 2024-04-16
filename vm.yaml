@@ -1,0 +1,54 @@
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: acm-managed
+  namespace: stan-kozlov
+spec:
+  dataVolumeTemplates:
+    - metadata:
+        name: acm-managed-volume
+      spec:
+        sourceRef:
+          kind: DataSource
+          name: rhel8
+          namespace: openshift-virtualization-os-images
+        storage:
+          resources:
+            requests:
+              storage: '32212254720'
+          storageClassName: lvms-vg1
+  instancetype:
+    name: u1.medium
+  preference:
+    name: rhel.8
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          disks:
+            - disk:
+                bus: virtio
+              name: acm-managed-disk
+            - disk:
+                bus: virtio
+              name: cloudinitdisk
+      volumes:
+        - dataVolume:
+            name: acm-managed-volume
+          name: acm-managed-disk
+        - cloudInitConfigDrive:
+            userData: |
+              #cloud-config
+              user: cloud-user
+              password: t4bi-ic8a-ok1j
+              chpasswd:
+                expire: false
+          name: cloudinitdisk
+      accessCredentials:
+        - sshPublicKey:
+            propagationMethod:
+              configDrive: {}
+            source:
+              secret:
+                secretName: sk-public
